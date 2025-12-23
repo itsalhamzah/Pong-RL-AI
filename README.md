@@ -100,7 +100,3 @@ After training, the AI learns to:
 ## 📝 License
 
 MIT License - feel free to use and modify!
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to open issues or submit pull requests.
