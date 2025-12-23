@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environment
+venv/
+env/
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# PyTorch models (optional - remove these lines if you want to include trained models)
+# models/*.pth
+
+# OS
+.DS_Store
+Thumbs.db
