@@ -35,6 +35,13 @@ class PongGame:
         self.NEON_GREEN = (50, 255, 100)
         self.GOLD = (255, 215, 0)
         
+        # Start button dimensions
+        self.button_width = 200
+        self.button_height = 60
+        self.button_x = SCREEN_WIDTH // 2 - self.button_width // 2
+        self.button_y = SCREEN_HEIGHT // 2 + 40
+        
+        self.game_started = False
         self.reset_game()
     
     def reset_game(self):
@@ -131,6 +138,63 @@ class PongGame:
         self.ball_vx = BALL_SPEED * direction
         self.ball_vy = BALL_SPEED * random.uniform(-0.5, 0.5)
     
+    def render_start_screen(self):
+        """Render the start screen with a start button"""
+        self.screen.fill(self.BLACK)
+        
+        # Draw center line
+        for y in range(0, SCREEN_HEIGHT, 20):
+            pygame.draw.rect(self.screen, (50, 50, 70), 
+                           (SCREEN_WIDTH // 2 - 2, y, 4, 10))
+        
+        # Title
+        title_font = pygame.font.Font(None, 72)
+        title = title_font.render("PONG", True, self.NEON_GREEN)
+        self.screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, 80))
+        
+        # Subtitle
+        subtitle = self.font.render("You vs AI", True, self.WHITE)
+        self.screen.blit(subtitle, (SCREEN_WIDTH // 2 - subtitle.get_width() // 2, 150))
+        
+        # Draw start button with hover effect
+        mouse_pos = pygame.mouse.get_pos()
+        is_hovered = (self.button_x <= mouse_pos[0] <= self.button_x + self.button_width and
+                     self.button_y <= mouse_pos[1] <= self.button_y + self.button_height)
+        
+        button_color = self.NEON_BLUE if is_hovered else (0, 150, 200)
+        
+        # Button glow effect when hovered
+        if is_hovered:
+            glow_rect = pygame.Rect(self.button_x - 4, self.button_y - 4,
+                                   self.button_width + 8, self.button_height + 8)
+            pygame.draw.rect(self.screen, (0, 100, 150), glow_rect, border_radius=15)
+        
+        # Button background
+        button_rect = pygame.Rect(self.button_x, self.button_y, 
+                                 self.button_width, self.button_height)
+        pygame.draw.rect(self.screen, button_color, button_rect, border_radius=10)
+        pygame.draw.rect(self.screen, self.WHITE, button_rect, 2, border_radius=10)
+        
+        # Button text
+        button_text = self.font.render("START", True, self.WHITE)
+        text_x = self.button_x + (self.button_width - button_text.get_width()) // 2
+        text_y = self.button_y + (self.button_height - button_text.get_height()) // 2
+        self.screen.blit(button_text, (text_x, text_y))
+        
+        # Controls hint
+        controls = self.small_font.render("W/S or ↑/↓ to move | First to 5 wins!", True, (100, 100, 120))
+        self.screen.blit(controls, (SCREEN_WIDTH // 2 - controls.get_width() // 2, SCREEN_HEIGHT - 60))
+        
+        click_hint = self.small_font.render("Click START or press SPACE to begin", True, (150, 150, 170))
+        self.screen.blit(click_hint, (SCREEN_WIDTH // 2 - click_hint.get_width() // 2, SCREEN_HEIGHT - 30))
+        
+        pygame.display.flip()
+    
+    def check_start_button_click(self, pos):
+        """Check if the start button was clicked"""
+        return (self.button_x <= pos[0] <= self.button_x + self.button_width and
+                self.button_y <= pos[1] <= self.button_y + self.button_height)
+
     def render(self):
         """Render the game"""
         self.screen.fill(self.BLACK)
@@ -237,10 +301,19 @@ def main():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
-                if event.key == pygame.K_SPACE and game.game_over:
-                    game.reset_game()
+                if event.key == pygame.K_SPACE:
+                    if not game.game_started:
+                        game.game_started = True
+                    elif game.game_over:
+                        game.reset_game()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if not game.game_started and game.check_start_button_click(event.pos):
+                    game.game_started = True
         
-        if not game.game_over:
+        if not game.game_started:
+            # Show start screen
+            game.render_start_screen()
+        elif not game.game_over:
             # Get human input
             keys = pygame.key.get_pressed()
             human_action = 0  # Stay
@@ -255,9 +328,13 @@ def main():
             
             # Update game
             game.step(human_action, ai_action)
+            
+            # Render game
+            game.render()
+        else:
+            # Game over - just render
+            game.render()
         
-        # Render
-        game.render()
         game.clock.tick(FPS)
     
     pygame.quit()
